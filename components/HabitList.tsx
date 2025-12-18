@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Habit } from "@/lib/types";
 import { HabitCard } from "@/components/HabitCard";
+import { HabitDetailsDialog } from "@/components/HabitDetailsDialog";
 
 interface HabitListProps {
     habits: Habit[];
@@ -11,6 +13,14 @@ interface HabitListProps {
 }
 
 export function HabitList({ habits, onToggle, onDelete, todayString }: HabitListProps) {
+    const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    const handleOpenDetails = (habit: Habit) => {
+        setSelectedHabit(habit);
+        setIsDialogOpen(true);
+    };
+
     if (habits.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -38,16 +48,24 @@ export function HabitList({ habits, onToggle, onDelete, todayString }: HabitList
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {habits.map((habit) => (
-                <HabitCard
-                    key={habit.id}
-                    habit={habit}
-                    onToggle={onToggle}
-                    onDelete={onDelete}
-                    todayString={todayString}
-                />
-            ))}
-        </div>
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {habits.map((habit) => (
+                    <HabitCard
+                        key={habit.id}
+                        habit={habit}
+                        onToggle={onToggle}
+                        onDelete={onDelete}
+                        onOpenDetails={handleOpenDetails}
+                        todayString={todayString}
+                    />
+                ))}
+            </div>
+            <HabitDetailsDialog
+                habit={selectedHabit}
+                open={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+            />
+        </>
     );
 }

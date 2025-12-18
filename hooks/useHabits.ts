@@ -1,34 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Habit, HabitCompletion } from "@/lib/types";
 
-const STORAGE_KEY = "habit-tracker-data";
-
-export function useHabits() {
+export function useHabits(userEmail?: string) {
     const [habits, setHabits] = useState<Habit[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
-    // Load habits from localStorage on mount
+    // Dynamic storage key based on user email
+    const storageKey = useMemo(() => {
+        return userEmail ? `utilan-data-${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}` : "utilan-data-guest";
+    }, [userEmail]);
+
+    // Load habits from localStorage whenever the storageKey changes
     useEffect(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        setIsLoaded(false);
+        const stored = localStorage.getItem(storageKey);
         if (stored) {
             try {
                 const parsed = JSON.parse(stored);
                 setHabits(parsed);
             } catch (error) {
                 console.error("Failed to parse habits from localStorage:", error);
+                setHabits([]);
             }
+        } else {
+            setHabits([]);
         }
         setIsLoaded(true);
-    }, []);
+    }, [storageKey]);
 
     // Save habits to localStorage whenever they change
     useEffect(() => {
         if (isLoaded) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+            localStorage.setItem(storageKey, JSON.stringify(habits));
         }
-    }, [habits, isLoaded]);
+    }, [habits, isLoaded, storageKey]);
 
     const addHabit = (habit: Omit<Habit, "id" | "createdAt" | "streak" | "completions">) => {
         const newHabit: Habit = {
